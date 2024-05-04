@@ -9,6 +9,7 @@
 	</div>
 	<div class="card-body p-4">
 		<form method="post">
+			<input asp-for="Id"hidden/>
 			<div class="border p-3 mt-4">
 			
 				@* 		<div asp-validation-summary="All"></div> *@
@@ -20,7 +21,7 @@
 				</div>
 				<div class="form-floating py-2 col-12">
 					<input asp-for="DisplayOrder" class=" form-control border-0 shadow" />
-					<label asp-for="DisplayOrder" class="ms-2"> Category Name</label>
+					<label asp-for="DisplayOrder" class="ms-2">  Display Order</label>
 
 					<span asp-validation-for="DisplayOrder" class="text-danger"></span>
 				</div>

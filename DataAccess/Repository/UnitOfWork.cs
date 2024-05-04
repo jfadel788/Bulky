@@ -10,8 +10,8 @@ namespace Bulky.DataAccess.Repository
 {
 	public class UnitOfWork : IUnitOfWork
 	{
-		public CategoryRepository CategoryRepository { get; private set; }
-		public ProductRepository ProductRepository { get; private set; }
+		public ICategoryRepository CategoryRepository { get; private set; }
+		public IProductRepository ProductRepository { get; private set; }
 		private readonly ApplicationDbContext _db;
 		public UnitOfWork(ApplicationDbContext db) {
 

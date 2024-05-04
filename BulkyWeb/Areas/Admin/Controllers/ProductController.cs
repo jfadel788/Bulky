@@ -1,7 +1,10 @@
 ﻿using Bulky.DataAccess.Repository.IRepository;
 using Bulky.DataAcess.Data;
 using Bulky.Models;
+using Bulky.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Collections.Generic;
 
 namespace BulkyWeb.Areas.Admin.Controllers
 {
@@ -9,65 +12,81 @@ namespace BulkyWeb.Areas.Admin.Controllers
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        public ProductController(IUnitOfWork unitOfWork)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public ProductController(IUnitOfWork unitOfWork,IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
+            _webHostEnvironment = webHostEnvironment;
 
         }
         public IActionResult Index()
         {
             List<Product> ObjectProductList = _unitOfWork.ProductRepository.GetAll().ToList();
+         
             return View(ObjectProductList);
         }
-        public IActionResult Create()
+        public IActionResult Upsert(int?id)
         {
-            return View();
+            ProductVM productVM = new()
+            {
+                CategoryList = _unitOfWork.CategoryRepository.GetAll().Select(u => new SelectListItem
+                {
+                    Text = u.Name,
+                    Value = u.Id.ToString()
+
+                }),
+                Product = new Product()
+            };
+            if(id==null || id == 0)
+            {
+                //create
+				return View(productVM);
+			}
+            else
+            {
+				productVM.Product = _unitOfWork.ProductRepository.Get(u => u.Id == id);
+                return View(productVM);
+
+            }
+         
+			
         }
         [HttpPost]
-        public IActionResult Create(Product obj)
+        public IActionResult Upsert(ProductVM productVm, IFormFile ?file)
         {
-            
+
 
             if (ModelState.IsValid)
             {
-                _unitOfWork.ProductRepository.Add(obj);
+                string wwwRootpath = _webHostEnvironment.WebRootPath;
+                if(file!=null)
+                {
+                    string fileName= Guid.NewGuid().ToString() +Path.GetExtension(file.FileName);
+                    string productPath= Path.Combine(wwwRootpath, @"images\product");
+                    using (var fileStream = new FileStream(Path.Combine(productPath, fileName),FileMode.Create))
+                    {
+                        file.CopyTo(fileStream);
+
+                    }
+                    productVm.Product.ImageUrl=@"\images\product\"+fileName; 
+                }
+                _unitOfWork.ProductRepository.Add(productVm.Product);
                 _unitOfWork.Save();
                 TempData["sucess"] = "The Product has created sucessfuly";
                 return RedirectToAction("Index");
             }
-            return View();
-
-
-        }
-        public IActionResult Edit(int? id)
-        {
-            if (id == null || id == 0)
+            else
             {
-                return NotFound();
+                productVm.CategoryList = _unitOfWork.CategoryRepository.GetAll().Select(u => new SelectListItem
+                {
+                    Text = u.Name,
+                    Value = u.Id.ToString()
 
-            }
-            Product? ProductFromDb = _unitOfWork.ProductRepository.Get(u => u.Id == id);
-            if (ProductFromDb == null)
-            {
-                return NotFound();
-            }
-            return View(ProductFromDb);
+                });
+            }	
+            return View(productVm);
         }
-        [HttpPost]
-        public IActionResult Edit(Product obj)
-        {
-
-            if (ModelState.IsValid)
-            {
-                _unitOfWork.ProductRepository.Update(obj);
-
-                TempData["sucess"] = "The Product has Updated sucessfuly";
-                _unitOfWork.Save();
-                return RedirectToAction("Index");
-            }
-            return View();
-
-        }
+       
 
         public IActionResult Delete(int id)
         {

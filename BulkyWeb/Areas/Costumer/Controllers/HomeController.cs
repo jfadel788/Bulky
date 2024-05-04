@@ -5,6 +5,7 @@ using System.Diagnostics;
 
 namespace BulkyWeb.Areas.Costumer.Controllers
 {
+    [Area("Costumer")]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
